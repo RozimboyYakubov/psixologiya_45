@@ -1,18 +1,18 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher, F, Router, html
+from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-# Bot tokeningiz va Chat ID
+# Bot tokeningiz
 TOKEN = "8257613052:AAFeuLINYi5qIPSMgkHbVri5W-0LCK1wXRM"
-PSYCHOLOG_CHAT_ID = 978885607
 
-# Railway'da proksi kerak emas, shuning uchun to'g'ridan-to'g'ri ulaymiz
+# Psixologlar (Adminlar) ID ro'yxati (2 ta ID kiritilgan)
+PSYCHOLOG_CHAT_IDS = [5825744781, 978885607]  # 👈 Ikkinchi ID'ni o'zingiznikiga o'zgartirib qo'ying
+
 bot = Bot(token=TOKEN)
-
 router = Router()
 
 # FSM holatlari
@@ -109,32 +109,31 @@ async def receive_problem(message: Message, state: FSMContext):
         ]
     )
     
-    try:
-        await message.bot.send_sticker(
-            chat_id=PSYCHOLOG_CHAT_ID,
-            sticker="CAACAgIAAxkBAAEQ4a5n5v6wZ7U072gXv7J6uN3Q_5h25wAC9AAD9wLIDGv8Q69Y2_jYNgQ"
-        )
-    except Exception:
-        pass
+    sent_successfully = False
 
-    try:
-        await message.bot.send_message(
-            chat_id=PSYCHOLOG_CHAT_ID,
-            text=report_text,
-            reply_markup=reply_keyboard,
-            parse_mode="Markdown"
-        )
-        
-        await message.answer_sticker("CAACAgIAAxkBAAEQ4bFn5v7X49_8123Xv7J6uN3Q_5h25wAC8AAD9wLIDGv8Q69Y2_jYNgQ")
+    # Barcha adminlarga (psixologlarga) xabar yuborish
+    for admin_id in PSYCHOLOG_CHAT_IDS:
+        try:
+            await message.bot.send_message(
+                chat_id=admin_id,
+                text=report_text,
+                reply_markup=reply_keyboard,
+                parse_mode="Markdown"
+            )
+            sent_successfully = True
+        except Exception as e:
+            logging.error(f"Admin {admin_id} ga xabar yuborishda xatolik: {e}")
+
+    if sent_successfully:
         await message.answer(
             "✅ Murojaatingiz psixologga muvaffaqiyatli va anonim tarzda yuborildi!\n\n"
             "💡 *Iltimos, Telegramni kuzatib turing, psixologimiz tez orada siz bilan bog'lanadi va javob yozadi.*",
             reply_markup=get_main_menu(),
             parse_mode="Markdown"
         )
-    except Exception:
+    else:
         await message.answer(
-            "Xatolik yuz berdi. Iltimos keyinroq urinib ko'ring.",
+            "❌ Xatolik yuz berdi. Xabar psixologga yetib bormadi. Iltimos keyinroq urinib ko'ring.",
             reply_markup=get_main_menu()
         )
     
@@ -242,7 +241,7 @@ async def process_q3(callback: CallbackQuery, state: FSMContext):
     elif total_score <= 4:
         result_text = "🟡 **Natija: O‘rtacha stress holati.**\nSiz biroz charchagansiz. Dam olishga, sevimli mashg'ulotlarga vaqt ajratishingiz kerak."
     else:
-        result_text = "🔴 **Natija: Yuqoridagi darajadagi stress yoki xavotir!**\nSizda biroz zo'riqish yuqori ekan. Iltimos, yuqoridagi **Anonim murojaat** tugmasi orqali psixologga yozib ko'ring, yolg'iz emassiz!"
+        result_text = "🔴 **Natija: Yuqori darajadagi stress yoki xavotir!**\nSizda biroz zo'riqish yuqori ekan. Iltimos, yuqoridagi **Anonim murojaat** tugmasi orqali psixologga yozib ko'ring, yolg'iz emassiz!"
 
     await callback.message.edit_text(
         f"{result_text}\n\nTest yakunlandi. Yana nima qilamiz?",
