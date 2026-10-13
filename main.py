@@ -5,17 +5,13 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
-from aiogram.client.session.aiohttp import AiohttpSession  # <-- PROXY UCHUN
 
 # Bot tokeningiz va Chat ID
 TOKEN = "8257613052:AAFeuLINYi5qIPSMgkHbVri5W-0LCK1wXRM"
 PSYCHOLOG_CHAT_ID = 978885607
 
-# PythonAnywhere proxy seansini yaratish (Endi aiohttp-socks borligi uchun xato bermaydi)
-session = AiohttpSession(proxy="http://proxy.server:3128")
-
-# Botni session bilan e'lon qilish
-bot = Bot(token=TOKEN, session=session)
+# Railway'da proksi kerak emas, shuning uchun to'g'ridan-to'g'ri ulaymiz
+bot = Bot(token=TOKEN)
 
 router = Router()
 
@@ -246,7 +242,7 @@ async def process_q3(callback: CallbackQuery, state: FSMContext):
     elif total_score <= 4:
         result_text = "🟡 **Natija: O‘rtacha stress holati.**\nSiz biroz charchagansiz. Dam olishga, sevimli mashg'ulotlarga vaqt ajratishingiz kerak."
     else:
-        result_text = "🔴 **Natija: Yuqori darajadagi stress yoki xavotir!**\nSizda biroz zo'riqish yuqori ekan. Iltimos, yuqoridagi **Anonim murojaat** tugmasi orqali psixologga yozib ko'ring, yolg'iz emassiz!"
+        result_text = "🔴 **Natija: Yuqoridagi darajadagi stress yoki xavotir!**\nSizda biroz zo'riqish yuqori ekan. Iltimos, yuqoridagi **Anonim murojaat** tugmasi orqali psixologga yozib ko'ring, yolg'iz emassiz!"
 
     await callback.message.edit_text(
         f"{result_text}\n\nTest yakunlandi. Yana nima qilamiz?",
@@ -275,4 +271,4 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main())w
+    asyncio.run(main())
